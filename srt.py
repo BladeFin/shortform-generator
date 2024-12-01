@@ -44,7 +44,14 @@ def mp3_to_srt(mp3_file, srt_file, karaoke=True, word_for_word=True):
         for segment in result["segments"]:
             for word in segment["words"]:
                 fin += [{'word': word['word'], 'start' : word['start'], 'end' : word['end']}]
-        print(fin)
+        workingInd = 0
+        for i in range(len(fin)-1):
+            if (len(fin[workingInd]['word'] + fin[workingInd+1]['word']) < 6):
+                fin[workingInd]['word'] = fin[workingInd]['word'].strip() + ' ' + fin[workingInd+1]['word'].strip()
+                fin[workingInd]['end'] = fin[workingInd+1]['end']
+                fin.pop(workingInd+1)
+                workingInd -= 1
+            workingInd += 1
         id = 0
         for dic in fin:
             output.write(f"{id}\n")
