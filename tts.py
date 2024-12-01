@@ -9,7 +9,7 @@ def generateTTS(script, output, lang='en', tld='com'):
     print(f"TTS generated to {output}!")
     #ffmpeg -i test_audio.mp3 -filter_complex "[0:a]atempo=1.25[a]" -map "[a]" output.mp3
     print(f"Speeding up audio...")
-    speedUpAudio(output, 1.15)
+    speedUpAudio(output, 1.50)
     print(f"Audio sped up!")
 
 def speedUpAudio(audioPath, amount):
