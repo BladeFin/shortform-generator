@@ -50,7 +50,7 @@ def doEverything(source_video_path, audio_path, srt_path, video_output_path, ran
             "-i", source_video_path,
             "-i", audio_path,
             "-ss", "0",
-            "-vf", f"subtitles={srt_path}:force_style='Alignment=6,MarginV=140,FontName=Times New Roman Bold,Shadow=2'",
+            "-vf", f"subtitles={srt_path}:force_style='Alignment=6,MarginV=140,FontName=Comic Sans MS Bold,Shadow=2,Fontsize=24'",
             "-ss", "0",
             "-map", "0:v:0",
             "-map", "1:a:0",
