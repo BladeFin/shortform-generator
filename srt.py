@@ -1,6 +1,6 @@
 import whisper
 
-def mp3_to_srt(mp3_file, srt_file, karaoke=True):
+def mp3_to_srt(mp3_file, srt_file, karaoke=True, word_for_word=True):
     print("Processing audio...")
     model = whisper.load_model("small.en")
     result = model.transcribe(mp3_file, word_timestamps=karaoke)
@@ -12,29 +12,47 @@ def mp3_to_srt(mp3_file, srt_file, karaoke=True):
     #result["segments"][3][words][first_word (I have to know the words)]
 
     #create and write the srt file
-    if (karaoke):
-        for segment in result["segments"]:
-            curr_id = 0
-            for i in range(len(segment["words"])):
-                fin = ""
-                for word in segment["words"]:
-                    if (segment["words"][i]["word"] != word["word"]):
-                        fin += word["word"]
+    if (not word_for_word):
+        if (karaoke):
+            for segment in result["segments"]:
+                curr_id = 0
+                for i in range(len(segment["words"])):
+                    fin = ""
+                    for word in segment["words"]:
+                        if (segment["words"][i]["word"] != word["word"]):
+                            fin += word["word"]
+                        else:
+                            fin += f"<font color=\"#fbff1c\">{word['word']}</font>"
+                    output.write(f"{curr_id}\n")
+                    curr_id += 1
+                    if (i != len(segment["words"])-1):
+                        output.write(f"{formatTimestamp(segment['words'][i]['start'])} --> {formatTimestamp(segment['words'][i+1]['start'])}\n")
                     else:
-                        fin += f"<font color=\"#fbff1c\">{word['word']}</font>"
-                output.write(f"{curr_id}\n")
-                curr_id += 1
-                if (i != len(segment["words"])-1):
-                    output.write(f"{formatTimestamp(segment['words'][i]['start'])} --> {formatTimestamp(segment['words'][i+1]['start'])}\n")
-                else:
-                    output.write(f"{formatTimestamp(segment['words'][i]['start'])} --> {formatTimestamp(word['end'])}\n")
-                output.write(f"{fin.strip()}\n\n")
-    else:
-        for segment in result["segments"]:
-            output.write(f"{segment['id']}\n")
-            output.write(f"{formatTimestamp(segment['start'])} --> {formatTimestamp(segment['end'])}\n")
-            output.write(f"{segment['text'].strip()}\n\n") #strip avoids leading spaces i.e. "hello world" instead of " hello world"
+                        output.write(f"{formatTimestamp(segment['words'][i]['start'])} --> {formatTimestamp(word['end'])}\n")
+                    output.write(f"{fin.strip()}\n\n")
+        else:
+            for segment in result["segments"]:
+                output.write(f"{segment['id']}\n")
+                output.write(f"{formatTimestamp(segment['start'])} --> {formatTimestamp(segment['end'])}\n")
+                output.write(f"{segment['text'].strip()}\n\n") #strip avoids leading spaces i.e. "hello world" instead of " hello world"
         output.close()
+    else:
+        #compile a list of all the words that are said
+        #group them based on character count
+        #make new srt file
+        fin = []
+        for segment in result["segments"]:
+            for word in segment["words"]:
+                fin += [{'word': word['word'], 'start' : word['start'], 'end' : word['end']}]
+        print(fin)
+        id = 0
+        for dic in fin:
+            output.write(f"{id}\n")
+            id += 1
+            output.write(f"{formatTimestamp(dic['start'])} --> {formatTimestamp(dic['end'])}\n")
+            output.write(f"{dic['word'].strip()}\n\n")
+        output.close()
+        pass
     
 
 #takes a timestamp in seconds.seconds (its a float) and outputs it as a string of "hours:seconds:minutes,milliseconds" - that is, "00:00:00,000"

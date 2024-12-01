@@ -4,13 +4,18 @@ from combine import createVideo
 import os
 
 def generateViralVideo(script, temp_audio_output, temp_srt_output, source_video_path, video_output_path, randomize=False, karaoke=True, lang='en', tld='com', flush=True):
-    generateTTS(script, temp_audio_output, lang=lang, tld=tld)
-    mp3_to_srt(temp_audio_output, temp_srt_output, karaoke=karaoke)
+    #generateTTS(script, temp_audio_output, lang=lang, tld=tld)
+    #mp3_to_srt(temp_audio_output, temp_srt_output, karaoke=karaoke)
     createVideo(source_video_path, temp_audio_output, temp_srt_output, video_output_path, randomize=randomize)
     if (flush):
-        os.remove(temp_audio_output)
-        os.remove(temp_srt_output)
-
+        try:
+            os.remove(temp_audio_output)
+        except (...):
+            print(f"Odd, {temp_audio_output} couldn't be deleted or wasn't found...")
+        try:
+            os.remove(temp_srt_output)
+        except (...):
+            print(f"Odd, {temp_srt_output} couldn't be deleted or wasn't found...")
 
 if (__name__ == "__main__"):
     script = """
@@ -39,7 +44,7 @@ if (__name__ == "__main__"):
 
     temp_audio_output = "temp_audio_output.mp3"
     temp_srt_output = "temp_subs.srt"
-    source_video_path = "formatted_spiral_parkour.mp4"
-    video_output_path = "output.mp4"
-    generateViralVideo(script, temp_audio_output, temp_srt_output, source_video_path, video_output_path, randomize=True, karaoke=True, lang='en', tld='com.au', flush=True)
+    source_video_path = "inputs/formatted_spiral_parkour.mp4"
+    video_output_path = "outputs/output.mp4"
+    generateViralVideo(script, temp_audio_output, temp_srt_output, source_video_path, video_output_path, randomize=True, karaoke=True, lang='en', tld='com.au', flush=False)
 
