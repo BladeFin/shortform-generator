@@ -1,15 +1,74 @@
 import subprocess
+from srt import formatTimestamp
+import random
 #crop video
 #add audio to video
 #add srt subs to video
 
-def createVideo(video_path, audio_path, srt_path):
+def createVideo(source_video_path, audio_path, srt_path, video_output_path, randomize=False):
     #get audio length
-    audio_duration = getAudioDuration(srt_path)
-    trimVideo(video_path, audio_duration)
-    addSubsToVideo("temp_trimmed_video.mp4",srt_path)
-    addAudioToVideo("temp_trimmed_subs_video.mp4", audio_path)
-    
+    print("Combining audio, video, and subtitles (srt)...")
+    doEverything(source_video_path,audio_path,srt_path, video_output_path, randomize=randomize)
+    print("Success!  Hopefully...   Worth double checking.")
+
+def doEverything(source_video_path, audio_path, srt_path, video_output_path, randomize=False):
+    try:
+        if (randomize):
+            videoTimeCommand = [
+                "ffprobe",
+                "-i", source_video_path,
+                "-show_entries", "format=duration",
+                "-v", "quiet",
+                "-of", "csv=p=0"
+            ]
+            result = subprocess.run(videoTimeCommand, stdout=subprocess.PIPE, stderr = subprocess.PIPE, text=True, check=True)
+
+            videoTime = result.stdout.strip()
+
+            audioTimeCommand = [
+                "ffprobe",
+                "-i", audio_path,
+                "-show_entries", "format=duration",
+                "-v", "quiet",
+                "-of", "csv=p=0"
+            ]
+
+            result = subprocess.run(audioTimeCommand, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, check=True)
+
+            audioTime = result.stdout.strip()
+            
+            startRange = float(videoTime)-float(audioTime)
+            startTime = formatTimestamp(random.uniform(0,startRange))
+            startTime = f"{startTime[:8]}.{startTime[9:]}"
+        else:
+            startTime = "00:00:00.000"
+        
+        command = [
+            "ffmpeg",
+            "-y",
+            "-ss", startTime,
+            "-i", source_video_path,
+            "-i", audio_path,
+            "-ss", "0",
+            "-vf", f"subtitles={srt_path}:force_style='Alignment=6,MarginV=140,FontName=Times New Roman Bold,Shadow=2'",
+            "-ss", "0",
+            "-map", "0:v:0",
+            "-map", "1:a:0",
+            "-c:v", "libx264",
+            "-c:a", "copy",               # Copy audio without re-encoding
+            "-shortest",
+            video_output_path
+            ]
+
+            
+        subprocess.run(command, check=True)
+
+    except subprocess.CalledProcessError as e:
+        print(f" Something went wrong while cutting the video: {e}")
+    except FileNotFoundError:
+        print("FFmpeg isn't around D:")
+
+
 def getAudioDuration(srt_path):
     srt = open(srt_path, "r")
     lines = [line for line in srt]
@@ -20,70 +79,12 @@ def getAudioDuration(srt_path):
     print("THE DURATION" + duration)
     return duration
 
-def trimVideo(video_path, audio_duration):
-    try:
-        command = [
-            "ffmpeg",
-            "-y",
-            "-i", video_path,
-            "-ss", "00:00:00.000",
-            "-to", audio_duration,
-            "-c", "copy",
-            "temp_trimmed_video.mp4"
-            ]
-        
-        subprocess.run(command, check=True)
-    
-    except subprocess.CalledProcessError as e:
-        print(f" Something went wrong while cutting the video: {e}")
-    except FileNotFoundError:
-        print("FFmpeg isn't around D:")
-
-def addSubsToVideo(video_path, srt_path):
-    try:
-        command = [
-            "ffmpeg",
-            "-y",
-            "-i", video_path,
-            "-vf", f"subtitles={srt_path}:force_style='Alignment=6,MarginV=140'",
-            "-c:a", "copy",
-            "temp_trimmed_subs_video.mp4"
-
-        ]
-
-        subprocess.run(command, check=True)
-
-    except subprocess.CalledProcessError as e:
-        print(f" Something went wrong while cutting the video: {e}")
-    except FileNotFoundError:
-        print("FFmpeg isn't around D:")
-
-def addAudioToVideo(video_path, audio_path):
-    try:
-        command = [
-            "ffmpeg",
-            "-y",
-            "-i", video_path,
-            "-i", audio_path,
-            "-c", "copy",
-            "-map", "0:v:0",
-            "-map", "1:a:0",
-            "-shortest",
-            "output.mp4"
-        ]
-    
-        subprocess.run(command, check=True)
-
-    except subprocess.CalledProcessError as e:
-        print(f" Something went wrong while cutting the video: {e}")
-    except FileNotFoundError:
-        print("FFmpeg isn't around D:")
-
 
     
+if (__name__ == "__main__"):
 
-video_path = "tinyplayback.mp4"
-audio_path = "test_audio.mp3"
-srt_path = "sub.srt"
-
-createVideo(video_path, audio_path, srt_path)
+    source_video_path = "verticaltrimmed.mp4"
+    audio_path = "test_audio.mp3"
+    srt_path = "sub.srt"
+    video_output_path = "output.mp4"
+    createVideo(source_video_path, audio_path, srt_path, video_output_path, randomize=True)

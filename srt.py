@@ -1,43 +1,41 @@
 import whisper
-import pronouncing
 
-def mp3_to_srt(mp3_file, srt_file):
+def mp3_to_srt(mp3_file, srt_file, karaoke=True):
+    print("Processing audio...")
     model = whisper.load_model("small.en")
-    result = model.transcribe(mp3_file)
+    result = model.transcribe(mp3_file, word_timestamps=karaoke)
 
     #result["segments"] is a list of dict
-    output = open("sub.srt", "w")
+    print("Audio processed!  Creating srt...")
+    output = open(srt_file, "w")
 
+    #result["segments"][3][words][first_word (I have to know the words)]
 
-    # Process the result segments
-    caption_id = 1
-    for segment in result["segments"]:
-        words = segment["text"].strip().split()  # Split text into words
-        start_time = segment["start"]
-
-        # Iterate through the words, creating smaller segments
-        for i in range(0, len(words), 1): #replace 5 w/ max_words
-            chunk = words[i:i + 1]  # Get up to max_words per caption #replace 5 w/ max_words
-            end_time = start_time + (segment["end"] - segment["start"]) * (countSyllables(chunk) / countSyllables(words))
-
-            # Write the SRT entry
-            output.write(f"{caption_id}\n")
-            output.write(f"{formatTimestamp(start_time)} --> {formatTimestamp(end_time)}\n")
-            output.write(f"{' '.join(chunk)}\n\n")
-
-            start_time = end_time  # Update start time for the next chunk
-            caption_id += 1
+    #create and write the srt file
+    if (karaoke):
+        for segment in result["segments"]:
+            curr_id = 0
+            for i in range(len(segment["words"])):
+                fin = ""
+                for word in segment["words"]:
+                    if (segment["words"][i]["word"] != word["word"]):
+                        fin += word["word"]
+                    else:
+                        fin += f"<font color=\"#fbff1c\">{word['word']}</font>"
+                output.write(f"{curr_id}\n")
+                curr_id += 1
+                if (i != len(segment["words"])-1):
+                    output.write(f"{formatTimestamp(segment['words'][i]['start'])} --> {formatTimestamp(segment['words'][i+1]['start'])}\n")
+                else:
+                    output.write(f"{formatTimestamp(segment['words'][i]['start'])} --> {formatTimestamp(word['end'])}\n")
+                output.write(f"{fin.strip()}\n\n")
+    else:
+        for segment in result["segments"]:
+            output.write(f"{segment['id']}\n")
+            output.write(f"{formatTimestamp(segment['start'])} --> {formatTimestamp(segment['end'])}\n")
+            output.write(f"{segment['text'].strip()}\n\n") #strip avoids leading spaces i.e. "hello world" instead of " hello world"
+        output.close()
     
-    output.close()
-    
-def countSyllables(lst):
-    fin = 0
-    for val in lst:
-        try:
-            fin += pronouncing.syllable_count(pronouncing.phones_for_word(val)[0])
-        except:
-            fin += len(val)/3
-    return fin
 
 #takes a timestamp in seconds.seconds (its a float) and outputs it as a string of "hours:seconds:minutes,milliseconds" - that is, "00:00:00,000"
 def formatTimestamp(timestamp):
@@ -78,11 +76,11 @@ def formatTimestamp(timestamp):
 
     with open(srt_file, "w") as f:
         f.write(srt.compose(subtitles))
-
-
-#if __name__ == "__main__":
-#    mp3_file = "your_audio_file.mp3"
-#    srt_file = "output_subtitles.srt"
-#    mp3_to_srt(mp3_file, srt_file)
 """
-mp3_to_srt("test_audio.mp3","output.srt")
+
+if __name__ == "__main__":
+    mp3_file = "your_audio_file.mp3"
+    srt_file = "output_subtitles.srt"
+    mp3_to_srt(mp3_file, srt_file)
+
+#mp3_to_srt("test_audio.mp3","output.srt")
