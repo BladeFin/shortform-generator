@@ -1,6 +1,15 @@
 import whisper
 
 def mp3_to_srt(mp3_file, srt_file, karaoke=True, word_for_word=True, max_chars=8):
+    """Takes a given mp3 and generates an srt file for it.  Uses whisper AI model to process language.
+
+    Args:
+        mp3_file (str): File path to mp3 file to be parsed.
+        srt_file (str): File path for desired output.
+        karaoke (bool, optional): If True and word_for_word=False, will highlight the currently-spoken word. Defaults to True.
+        word_for_word (bool, optional): If True, no more than max_chars will show at once for subtitles. Defaults to True.
+        max_chars (int, optional): Max amount of chars that will show at once . Defaults to 8.
+    """
     print("Processing audio...")
     #whisper is a tts model
     model = whisper.load_model("small.en")

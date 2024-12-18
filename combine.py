@@ -6,6 +6,15 @@ import random
 #add srt subs to video
 
 def createVideo(source_video_path, audio_path, srt_path, video_output_path, randomize=False):
+    """Crops a source video and adds subtitles and audio.
+
+    Args:
+        source_video_path (str): File path to background video.
+        audio_path (str): File path to audio.
+        srt_path (str): File path to srt (subtitles).
+        video_output_path (str): File path to desired output.  Recommended to end in .mp4.
+        randomize (bool, optional): If True, starts background video at a random (viable) time. Defaults to False.
+    """
     print("Combining audio, video, and subtitles (srt)...")
     doEverything(source_video_path,audio_path,srt_path, video_output_path, randomize=randomize)
     print("Success!  Hopefully...   Worth double checking.")

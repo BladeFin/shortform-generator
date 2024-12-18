@@ -2,6 +2,14 @@ from gtts import gTTS
 import subprocess
 
 def generateTTS(script, output, lang='en', tld='com'):
+    """Generates an audio based on a given script
+
+    Args:
+        script (str): The script for what should be said.
+        output (str): Path to desired mp3 output location.  Recommended to end in .mp3.
+        lang (str, optional): Language for TTS, only supports certain languages. Defaults to 'en'.
+        tld (str, optional): Regional accent for given language based on domain, only supports certain domains. Defaults to 'com'.
+    """
     print("Generating TTS...")
     prompt=script
     tts = gTTS(prompt, lang=lang, tld=tld) #returns mp4 audio using google transalte
