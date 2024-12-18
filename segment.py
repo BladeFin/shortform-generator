@@ -5,9 +5,9 @@ from moviepy.video.io.VideoFileClip import VideoFileClip
 
 #NOTE: REQUIRES pypi ffmpeg_smart_trim to be installed! Also, if you're using a specific python installation this might get messed up!
 
-TIKTOK_MAX_TIME = 3600
-INSTAGRAM_MAX_TIME = 90
-YOUTUBE_MAX_TIME = 180
+TIKTOK_MAX_TIME = 3598
+INSTAGRAM_MAX_TIME = 88
+YOUTUBE_MAX_TIME = 178
 
 def segmentVideo(source_video_path, tiktok=True, instagram=True, youtube=True):
     video_timeCommand = [
@@ -21,9 +21,11 @@ def segmentVideo(source_video_path, tiktok=True, instagram=True, youtube=True):
 
     video_time = float(result.stdout.strip())
 
-    segmentVideoForPlatform(source_video_path, video_time, "tiktok", TIKTOK_MAX_TIME)
-    segmentVideoForPlatform(source_video_path, video_time, "instagram", INSTAGRAM_MAX_TIME)
-    segmentVideoForPlatform(source_video_path, video_time, "youtube", YOUTUBE_MAX_TIME)
+    cropVideo2(source_video_path, "instagram", INSTAGRAM_MAX_TIME)
+
+    # segmentVideoForPlatform(source_video_path, video_time, "tiktok", TIKTOK_MAX_TIME)
+    # segmentVideoForPlatform(source_video_path, video_time, "instagram", INSTAGRAM_MAX_TIME)
+    # segmentVideoForPlatform(source_video_path, video_time, "youtube", YOUTUBE_MAX_TIME)
 
 def segmentVideoForPlatform(source_video_path, video_time, platform_name, max_time):
     name_of_file = source_video_path[source_video_path.rindex("/")+1:]
@@ -32,7 +34,7 @@ def segmentVideoForPlatform(source_video_path, video_time, platform_name, max_ti
     else:
         videos_needed = math.ceil(video_time/max_time)
         for i in range(videos_needed):
-            cropVideo(source_video_path, (max_time-2)*i, min((max_time-2)*(i+1)+2,video_time), f"outputs/{platform_name}/{platform_name}_{i}_{name_of_file}")
+            cropVideo2(source_video_path, (max_time-2)*i, min((max_time-2)*(i+1)+2,video_time), f"outputs/{platform_name}/{platform_name}_{i}_{name_of_file}")
 
 # def cropVideo3(source_video_path, start_time, end_time, output_path):
 #     try:
@@ -52,39 +54,20 @@ def segmentVideoForPlatform(source_video_path, video_time, platform_name, max_ti
 #         print(f"ffmpeg just isn't around D:.  Or maybe the file, not sure")
 
 
-def cropVideo(source_video_path, start_time, end_time, output_path):
-    try:
-        command = [
-            "ffmpeg",
-            "-y",
-            "-ss", f"{start_time}",
-            "-to", f"{end_time}",
-            "-i", source_video_path,
-            "-c:v", "libx264",
-            "-c:a", "aac",
-            output_path
-        ]
+def cropVideo2(source_video_path, platform_name, max_time):
+    name_of_file = source_video_path[source_video_path.rindex("/")+1:]
+    video = VideoFileClip(source_video_path)
+    video_duration = video.duration
 
-        subprocess.run(command, check=True)
-    except subprocess.CalledProcessError as e:
-        print(f"Something went wrong while trying to crop {source_video_path}")
-    except FileNotFoundError:
-        print(f"ffmpeg just isn't around D:.  Or maybe the file, not sure")
+    videos_needed = math.ceil(video_duration/max_time)
 
-# def cropVideo2(source_video_path, platform_name, max_time):
-#     name_of_file = source_video_path[source_video_path.rindex("/")+1:]
-#     video = VideoFileClip(source_video_path)
-#     video_duration = video.duration
+    for i in range(videos_needed):
+        start_time = i*max_time
+        end_time = min((i+1)*max_time, video_duration)
 
-#     videos_needed = math.ceil(video_duration/max_time)
-
-#     for i in range(videos_needed):
-#         start_time = i*max_time
-#         end_time = min((i+1)*max_time, video_duration)
-
-#         segment = video.subclip(start_time, end_time)
-#         output_file = f"outputs/{platform_name}/{platform_name}_{i}_{name_of_file}"
-#         segment.write_videofile(output_file, codec="libx264", audio_codec="aac")
+        segment = video.subclip(start_time, end_time)
+        output_file = f"outputs/{platform_name}/{platform_name}_{i}_{name_of_file}"
+        segment.write_videofile(output_file, codec="libx264", audio_codec="aac")
 
 
 if (__name__ == "__main__"):
