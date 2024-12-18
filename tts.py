@@ -4,21 +4,22 @@ import subprocess
 def generateTTS(script, output, lang='en', tld='com'):
     print("Generating TTS...")
     prompt=script
-    tts = gTTS(prompt, lang=lang, tld=tld)
-    tts.save(output)
+    tts = gTTS(prompt, lang=lang, tld=tld) #returns mp4 audio using google transalte
+    tts.save(output) #saves above audio to file
     print(f"TTS generated to {output}!")
     #ffmpeg -i test_audio.mp3 -filter_complex "[0:a]atempo=1.25[a]" -map "[a]" output.mp3
     print(f"Speeding up audio...")
     speedUpAudio(output, 1.50)
     print(f"Audio sped up!")
 
+#used to speed up audio, amount=1.5 \equiv 1.5x speed
 def speedUpAudio(audioPath, amount):
     try:
-        command = [
+        command = [ #speed up audio
             "ffmpeg",
             "-y",
             "-i", audioPath,
-            "-filter_complex", f"[0:a]atempo={amount}[a]",
+            "-filter_complex", f"[0:a]atempo={amount}[a]", #amount=1.5 \equiv 1.5x speed
             "-map", "[a]",
             f"temp{audioPath}"
             ]
@@ -26,7 +27,7 @@ def speedUpAudio(audioPath, amount):
             
         subprocess.run(command, check=True)
 
-        command = [
+        command = [ #replace the original with the (sped up) temp
             "powershell",
             "mv",
             "-Force",
