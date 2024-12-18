@@ -2,6 +2,7 @@ import whisper
 
 def mp3_to_srt(mp3_file, srt_file, karaoke=True, word_for_word=True):
     print("Processing audio...")
+    #whisper is a tts model
     model = whisper.load_model("small.en")
     result = model.transcribe(mp3_file, word_timestamps=karaoke)
 
@@ -46,7 +47,7 @@ def mp3_to_srt(mp3_file, srt_file, karaoke=True, word_for_word=True):
                 fin += [{'word': word['word'], 'start' : word['start'], 'end' : word['end']}]
         workingInd = 0
         for i in range(len(fin)-1):
-            if (len(fin[workingInd]['word'] + fin[workingInd+1]['word']) < 6):
+            if (len(fin[workingInd]['word'] + fin[workingInd+1]['word']) < 8):
                 fin[workingInd]['word'] = fin[workingInd]['word'].strip() + ' ' + fin[workingInd+1]['word'].strip()
                 fin[workingInd]['end'] = fin[workingInd+1]['end']
                 fin.pop(workingInd+1)
