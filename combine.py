@@ -6,14 +6,13 @@ import random
 #add srt subs to video
 
 def createVideo(source_video_path, audio_path, srt_path, video_output_path, randomize=False):
-    #get audio length
     print("Combining audio, video, and subtitles (srt)...")
     doEverything(source_video_path,audio_path,srt_path, video_output_path, randomize=randomize)
     print("Success!  Hopefully...   Worth double checking.")
 
 def doEverything(source_video_path, audio_path, srt_path, video_output_path, randomize=False):
     try:
-        if (randomize):
+        if (randomize): #Make the source video start at a random (viable) time
             videoTimeCommand = [
                 "ffprobe",
                 "-i", source_video_path,
@@ -43,6 +42,7 @@ def doEverything(source_video_path, audio_path, srt_path, video_output_path, ran
         else:
             startTime = "00:00:00.000"
         
+        #add srt subtitles to source video
         command = [
             "ffmpeg",
             "-y",
@@ -68,7 +68,8 @@ def doEverything(source_video_path, audio_path, srt_path, video_output_path, ran
     except FileNotFoundError:
         print("FFmpeg isn't around D:")
 
-
+#Uses the srt file to find the duration of the audio
+#Deprecated, use ffprobe above now
 def getAudioDuration(srt_path):
     srt = open(srt_path, "r")
     lines = [line for line in srt]
@@ -82,7 +83,6 @@ def getAudioDuration(srt_path):
 
     
 if (__name__ == "__main__"):
-
     source_video_path = "verticaltrimmed.mp4"
     audio_path = "test_audio.mp3"
     srt_path = "sub.srt"
