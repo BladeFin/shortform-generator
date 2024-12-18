@@ -42,6 +42,6 @@ if (__name__ == "__main__"):
     temp_audio_output = "temp_audio_output.mp3"
     temp_srt_output = "temp_subs.srt"
     source_video_path = "inputs/parkour_recording_trimmed.mkv"
-    video_output_path = f"outputs/{script_path[:8]}.mp4"
+    video_output_path = f"outputs/{script_path[8:]}.mp4"
     generateViralVideo(script_path, temp_audio_output, temp_srt_output, source_video_path, video_output_path, randomize=True, karaoke=True, lang='en', tld='com.au', flush=True)
 
