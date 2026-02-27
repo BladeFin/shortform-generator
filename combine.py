@@ -17,7 +17,7 @@ def createVideo(source_video_path, audio_path, srt_path, video_output_path, rand
     """
     print("Combining audio, video, and subtitles (srt)...")
     doEverything(source_video_path,audio_path,srt_path, video_output_path, randomize=randomize)
-    print("Success!  Hopefully...   Worth double checking.")
+    print(f"Success!  Hopefully...   Worth double checking.  Should be {video_output_path}")
 
 def doEverything(source_video_path, audio_path, srt_path, video_output_path, randomize=False):
     try:

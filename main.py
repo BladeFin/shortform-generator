@@ -4,7 +4,7 @@ from combine import createVideo
 from segment import segmentVideo
 import os
 
-def generateViralVideo(script_path, source_video_path, video_output_path, temp_audio_output="temp_audio_output.mp3", temp_srt_output="temp_subs.srt", randomize=False, karaoke=True, word_for_word=True, max_chars=8, lang='en', tld='com', flush=True):
+def generateViralVideo(script_path, source_video_path, video_output_path, temp_audio_output="temp_audio_output.mp3", temp_srt_output="temp_subs.srt", randomize=False, karaoke=True, word_for_word=True, max_chars=8, lang='en', tld='co.au', flush=True):
     """Creates a video or series of videos with footage in the background and subtitles in the foreground.
 
     Args:
@@ -27,7 +27,7 @@ def generateViralVideo(script_path, source_video_path, video_output_path, temp_a
     mp3_to_srt(temp_audio_output, temp_srt_output, karaoke=karaoke, word_for_word=word_for_word, max_chars=max_chars)
     createVideo(source_video_path, temp_audio_output, temp_srt_output, video_output_path, randomize=randomize)
     if (flush):
-        flushTempFiles([temp_audio_output, temp_srt_output])
+       flushTempFiles([temp_audio_output, temp_srt_output])
     segmentVideo(video_output_path)
     
 
@@ -54,10 +54,12 @@ def flushTempFiles(path_list):
             print(f"Odd, {path} couldn't be deleted or wasn't found...")
 
 if (__name__ == "__main__"):
-    script_path = "scripts/protective_ex"
+    script_paths = ["scripts/bad_tv_shows", "scripts/embarassing_moments"]
     temp_audio_output = "temp_audio_output.mp3"
     temp_srt_output = "temp_subs.srt"
     source_video_path = "inputs/parkour_recording_trimmed.mkv"
-    video_output_path = f"outputs/{script_path[8:]}.mp4"
-    generateViralVideo(script_path, source_video_path, video_output_path, temp_audio_output=temp_audio_output, temp_srt_output=temp_srt_output, randomize=True, karaoke=True, word_for_word=True, lang='en', tld='com.au', flush=True)
+    # video_output_path = f"outputs/{script_path[8:]}.mp4"
+    tld = "com.au"
+    for script in script_paths:
+        generateViralVideo(script, source_video_path, f"outputs/{script[8:]}.mp4", temp_audio_output=temp_audio_output, temp_srt_output=temp_srt_output, randomize=True, karaoke=True, word_for_word=True, lang='en', tld=tld, flush=True)
 

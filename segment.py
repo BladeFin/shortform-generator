@@ -18,6 +18,8 @@ def segmentVideo(source_video_path, tiktok=True, instagram=True, youtube=True):
         instagram (bool, optional): should we generate instagram reels (max 1.5m). Defaults to True.
         youtube (bool, optional): should we generate youtube shorts (max 3m). Defaults to True.
     """
+
+    print("Segmenting video...")
     video_timeCommand = [
         "ffprobe",
         "-i", source_video_path,
@@ -33,7 +35,10 @@ def segmentVideo(source_video_path, tiktok=True, instagram=True, youtube=True):
     segmentVideoForPlatform(source_video_path, video_time, "instagram", INSTAGRAM_MAX_TIME)
     segmentVideoForPlatform(source_video_path, video_time, "youtube", YOUTUBE_MAX_TIME)
 
+    print(f"Done segmenting {source_video_path}!")
+
 def segmentVideoForPlatform(source_video_path, video_time, platform_name, max_time):
+    print(f"Segmenting for {platform_name}...")
     try:
         name_of_file = source_video_path[source_video_path.rindex("/")+1:]
     except ValueError:
