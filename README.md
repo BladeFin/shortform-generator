@@ -2,7 +2,7 @@
 
 A small Python media pipeline that turns a text script and background video into short-form content with generated narration, timed subtitles, and platform-specific cuts.
 
-[See a quick demo here!](https://youtube.com/shorts/4va7mc50lXo)
+[See a quick demo here!](https://youtube.com/shorts/2q0wzHMRaTA)
 
 ## What it does
 
