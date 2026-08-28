@@ -17,59 +17,62 @@ def mp3_to_srt(mp3_file, srt_file, karaoke=True, word_for_word=True, max_chars=8
 
     #result["segments"] is a list of dict
     print("Audio processed!  Creating srt...")
-    output = open(srt_file, "w")
+    if max_chars <= 0:
+        raise ValueError("max_chars must be positive")
+
+    with open(srt_file, "w", encoding="utf-8") as output:
 
     #result["segments"][3][words][first_word (I have to know the words)]
 
     #create and write the srt file
-    if (not word_for_word):
-        if (karaoke):
-            for segment in result["segments"]:
-                curr_id = 0
-                for i in range(len(segment["words"])):
-                    fin = ""
-                    for word in segment["words"]:
-                        if (segment["words"][i]["word"] != word["word"]):
-                            fin += word["word"]
+        if not word_for_word:
+            if karaoke:
+                for segment in result["segments"]:
+                    curr_id = 0
+                    for i in range(len(segment["words"])):
+                        fin = ""
+                        for word in segment["words"]:
+                            if (segment["words"][i]["word"] != word["word"]):
+                                fin += word["word"]
+                            else:
+                                fin += f"<font color=\"#fbff1c\">{word['word']}</font>"
+                        output.write(f"{curr_id}\n")
+                        curr_id += 1
+                        if (i != len(segment["words"])-1):
+                            output.write(f"{formatTimestamp(segment['words'][i]['start'])} --> {formatTimestamp(segment['words'][i+1]['start'])}\n")
                         else:
-                            fin += f"<font color=\"#fbff1c\">{word['word']}</font>"
-                    output.write(f"{curr_id}\n")
-                    curr_id += 1
-                    if (i != len(segment["words"])-1):
-                        output.write(f"{formatTimestamp(segment['words'][i]['start'])} --> {formatTimestamp(segment['words'][i+1]['start'])}\n")
-                    else:
-                        output.write(f"{formatTimestamp(segment['words'][i]['start'])} --> {formatTimestamp(word['end'])}\n")
-                    output.write(f"{fin.strip()}\n\n")
+                            output.write(f"{formatTimestamp(segment['words'][i]['start'])} --> {formatTimestamp(word['end'])}\n")
+                        output.write(f"{fin.strip()}\n\n")
+            else:
+                for segment in result["segments"]:
+                    output.write(f"{segment['id']}\n")
+                    output.write(f"{formatTimestamp(segment['start'])} --> {formatTimestamp(segment['end'])}\n")
+                    output.write(f"{segment['text'].strip()}\n\n") #strip avoids leading spaces i.e. "hello world" instead of " hello world"
+            output.close()
         else:
+            #compile a list of all the words that are said
+            #group them based on character count
+            #make new srt file
+            fin = []
             for segment in result["segments"]:
-                output.write(f"{segment['id']}\n")
-                output.write(f"{formatTimestamp(segment['start'])} --> {formatTimestamp(segment['end'])}\n")
-                output.write(f"{segment['text'].strip()}\n\n") #strip avoids leading spaces i.e. "hello world" instead of " hello world"
-        output.close()
-    else:
-        #compile a list of all the words that are said
-        #group them based on character count
-        #make new srt file
-        fin = []
-        for segment in result["segments"]:
-            for word in segment["words"]:
-                fin += [{'word': word['word'], 'start' : word['start'], 'end' : word['end']}]
-        workingInd = 0
-        for i in range(len(fin)-1):
-            if (len(fin[workingInd]['word'] + fin[workingInd+1]['word']) < max_chars):
-                fin[workingInd]['word'] = fin[workingInd]['word'].strip() + ' ' + fin[workingInd+1]['word'].strip()
-                fin[workingInd]['end'] = fin[workingInd+1]['end']
-                fin.pop(workingInd+1)
-                workingInd -= 1
-            workingInd += 1
-        id = 0
-        for dic in fin:
-            output.write(f"{id}\n")
-            id += 1
-            output.write(f"{formatTimestamp(dic['start'])} --> {formatTimestamp(dic['end'])}\n")
-            output.write(f"{dic['word'].strip()}\n\n")
-        output.close()
-        pass
+                for word in segment["words"]:
+                    fin += [{'word': word['word'], 'start' : word['start'], 'end' : word['end']}]
+            workingInd = 0
+            for i in range(len(fin)-1):
+                if (len(fin[workingInd]['word'] + fin[workingInd+1]['word']) < max_chars):
+                    fin[workingInd]['word'] = fin[workingInd]['word'].strip() + ' ' + fin[workingInd+1]['word'].strip()
+                    fin[workingInd]['end'] = fin[workingInd+1]['end']
+                    fin.pop(workingInd+1)
+                    workingInd -= 1
+                workingInd += 1
+            id = 0
+            for dic in fin:
+                output.write(f"{id}\n")
+                id += 1
+                output.write(f"{formatTimestamp(dic['start'])} --> {formatTimestamp(dic['end'])}\n")
+                output.write(f"{dic['word'].strip()}\n\n")
+            output.close()
+            pass
     
 
 #takes a timestamp in seconds.seconds (its a float) and outputs it as a string of "hours:seconds:minutes,milliseconds" - that is, "00:00:00,000"

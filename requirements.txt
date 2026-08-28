@@ -1,0 +1,3 @@
+gTTS>=2.5,<3
+openai-whisper>=20231117
+ffmpeg-smart-trim>=0.1

@@ -1,7 +1,7 @@
 import subprocess
 import math
 import shutil
-from moviepy.video.io.VideoFileClip import VideoFileClip
+import os
 
 #NOTE: REQUIRES pypi ffmpeg_smart_trim to be installed! Also, if you're using a specific python installation this might get messed up!
 
@@ -31,9 +31,13 @@ def segmentVideo(source_video_path, tiktok=True, instagram=True, youtube=True):
 
     video_time = float(result.stdout.strip())
 
-    segmentVideoForPlatform(source_video_path, video_time, "tiktok", TIKTOK_MAX_TIME)
-    segmentVideoForPlatform(source_video_path, video_time, "instagram", INSTAGRAM_MAX_TIME)
-    segmentVideoForPlatform(source_video_path, video_time, "youtube", YOUTUBE_MAX_TIME)
+    for platform_name, max_time, enabled in (
+        ("tiktok", TIKTOK_MAX_TIME, tiktok),
+        ("instagram", INSTAGRAM_MAX_TIME, instagram),
+        ("youtube", YOUTUBE_MAX_TIME, youtube),
+    ):
+        if enabled:
+            segmentVideoForPlatform(source_video_path, video_time, platform_name, max_time)
 
     print(f"Done segmenting {source_video_path}!")
 
@@ -44,12 +48,20 @@ def segmentVideoForPlatform(source_video_path, video_time, platform_name, max_ti
     except ValueError:
         name_of_file = source_video_path
     
-    if (video_time < max_time):
-        shutil.copy(source_video_path, f"outputs/{platform_name}/{platform_name}_{name_of_file}")
+    output_directory = os.path.join("outputs", platform_name)
+    os.makedirs(output_directory, exist_ok=True)
+
+    if video_time < max_time:
+        shutil.copy(source_video_path, os.path.join(output_directory, f"{platform_name}_{name_of_file}"))
     else:
         videos_needed = math.ceil(video_time/max_time)
         for i in range(videos_needed):
-            cropVideo(source_video_path, (max_time-2)*i, min((max_time-2)*(i+1)+2,video_time), f"outputs/{platform_name}/{platform_name}_{i}_{name_of_file}")
+            cropVideo(
+                source_video_path,
+                (max_time - 2) * i,
+                min((max_time - 2) * (i + 1) + 2, video_time),
+                os.path.join(output_directory, f"{platform_name}_{i}_{name_of_file}"),
+            )
 
 def cropVideo(source_video_path, start_time, end_time, output_path):
     try:

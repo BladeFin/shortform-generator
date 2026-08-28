@@ -1,78 +1,108 @@
 # Short-Form Content Generator 🎬
 
-A Python tool that **creates short videos with a background clip, voiceover, and subtitles**.  
-You provide a script and a source video, and it generates a video with:
+A small Python media pipeline that turns a text script and background video into short-form content with generated narration, timed subtitles, and platform-specific cuts.
 
-- Text-to-speech (TTS) audio
-- Auto-generated subtitles (SRT)
-- Word-for-word or karaoke-style captions
-- Video segmented for short-form platforms
+[See a quick demo here!](https://youtube.com/shorts/4va7mc50lXo)
 
-It’s designed for viral content generation, TikTok-style clips, or social media storytelling.
+## What it does
 
----
+1. Generates an MP3 voiceover from a UTF-8 text script with Google Text-to-Speech.
+2. Transcribes the voiceover with OpenAI Whisper and writes an SRT subtitle file.
+3. Combines the background video, narration, and styled subtitles with FFmpeg.
+4. Creates TikTok, Instagram, and YouTube output variants.
 
-## Features
+This project was built as an experiment in media automation and command-line tooling. It is intentionally a straightforward batch pipeline rather than a hosted application.
 
-- **Text-to-Speech:** Uses [gTTS](https://pypi.org/project/gTTS/)
-  - Supports multiple accents via TLDs (e.g., `co.au` for Australian English)
-  - Configurable language (`lang` parameter)
-- **Subtitle Generation:** Uses [Whisper](https://github.com/openai/whisper) to generate `.srt` files
-  - Word-for-word or karaoke highlighting
-  - Character limits for fast-reading subtitles
-- **Video Processing:** Uses **subprocess calls to `ffmpeg`, `ffprobe` and `ffmpeg_smart_trim`**
-  - Requires `ffmpeg_smart_trim` for segmentation
-- **Flexible Workflow:**
-  - Randomized background start time
-  - Optional flushing of temporary files
-  - Can handle multiple scripts in one run
-  - Custom text display lengths
+## Requirements
 
----
+- Python 3.9+
+- FFmpeg and FFprobe available on `PATH`
+- Internet access when using gTTS (Google's service is contacted to generate speech)
+- A Whisper model download on first transcription run (the default model is `small.en`)
 
-## Platform
+Python dependencies are listed in [`requirements.txt`](requirements.txt).
 
-- **Windows only** (tested on Windows 11)
-- Requires `ffmpeg` and `ffmpeg_smart_trim (pypi)` installed and accessible via the command line
-
----
-
-## Installation
-
-1. Clone the repository:
+## Setup
 
 ```bash
-git clone https://github.com/connor-koefelda/short-form-generator.git
-cd short-form-generator
+python -m venv .venv
+# Windows PowerShell:
+.venv\Scripts\Activate.ps1
+# macOS/Linux:
+source .venv/bin/activate
+
+python -m pip install --upgrade pip
+python -m pip install -r requirements.txt
 ```
 
-2. Install dependencies
+Install FFmpeg using your operating system's package manager or the [official FFmpeg downloads](https://ffmpeg.org/download.html), then verify:
 
-- [gTTS](https://pypi.org/project/gTTS/)
-- [Whisper](https://pypi.org/project/whisper/)
-  - Whisper's 'small.en' model must be configured. Can be modified in srt.py
-- [MoviePy](https://pypi.org/project/moviepy/)
-- [ffmpeg-smart-trim](https://pypi.org/project/ffmpeg-smart-trim/)
+```bash
+ffmpeg -version
+ffprobe -version
+```
 
-## Example Usage
+## Usage
+
+Place text scripts in `scripts/` and a source video in `inputs/`. These directories are intentionally gitignored because media files can be large and may contain copyrighted material.
+
+Update the example paths in `main.py`, then run:
+
+```bash
+python main.py
+```
+
+Generated files are written to `outputs/`, with platform-specific files under `outputs/tiktok/`, `outputs/instagram/`, and `outputs/youtube/`.
+
+The main reusable entry point is `generateViralVideo`:
 
 ```python
-    script_paths = ["scripts/bad_tv_shows", "scripts/embarassing_moments"]
-    temp_audio_output = "temp_audio_output.mp3"
-    temp_srt_output = "temp_subs.srt"
-    source_video_path = "inputs/parkour_recording_trimmed.mkv"
-    # video_output_path = f"outputs/{script_path[8:]}.mp4"
-    tld = "com.au"
-    for script in script_paths:
-        generateViralVideo(script, source_video_path, f"outputs/{script[8:]}.mp4", temp_audio_output=temp_audio_output, temp_srt_output=temp_srt_output, randomize=True, karaoke=True, word_for_word=True, lang='en', tld=tld, flush=True)
+from main import generateViralVideo
+
+generateViralVideo(
+    script_path="scripts/example.txt",
+    source_video_path="inputs/background.mp4",
+    video_output_path="outputs/example.mp4",
+    randomize=True,
+)
 ```
 
-## Notes:
+### `generateViralVideo` arguments
 
-- ### Scripts format:
-  - Should be plaintext UTF-8 with either no extension or .txt
-- ### Background video format:
-  - Only tested with .mkv and .mp4
-  - Should support all major video formats
-- ### Resulting video format:
-  - Exports videos as .mp4
+| Argument            | Type   | Default                   | Description                                                                      |
+| ------------------- | ------ | ------------------------- | -------------------------------------------------------------------------------- |
+| `script_path`       | `str`  | required                  | Path to a UTF-8 plain-text script used to generate the narration.                |
+| `source_video_path` | `str`  | required                  | Path to the background video.                                                    |
+| `video_output_path` | `str`  | required                  | Path where the combined MP4 should be saved.                                     |
+| `temp_audio_output` | `str`  | `"temp_audio_output.mp3"` | Temporary MP3 path for generated narration.                                      |
+| `temp_srt_output`   | `str`  | `"temp_subs.srt"`         | Temporary SRT path for generated subtitles.                                      |
+| `randomize`         | `bool` | `False`                   | Start the background video at a random viable position instead of the beginning. |
+| `karaoke`           | `bool` | `True`                    | Highlight the currently spoken word when `word_for_word=False`.                  |
+| `word_for_word`     | `bool` | `True`                    | Show short groups of words instead of full Whisper segments.                     |
+| `max_chars`         | `int`  | `8`                       | Maximum caption length when `word_for_word=True`. Must be positive.              |
+| `lang`              | `str`  | `"en"`                    | gTTS language code.                                                              |
+| `tld`               | `str`  | `"co.au"`                 | gTTS top-level domain used to select a regional accent.                          |
+| `flush`             | `bool` | `True`                    | Delete the temporary MP3 and SRT files after video creation.                     |
+
+Scripts should be plain UTF-8 text. The default subtitle mode groups words into short captions; `karaoke=True` can highlight the currently spoken word when `word_for_word=False`.
+
+## Project structure
+
+- `main.py` — orchestrates the complete workflow
+- `tts.py` — narration generation and FFmpeg audio speed-up
+- `srt.py` — Whisper transcription and SRT formatting
+- `combine.py` — FFmpeg composition
+- `segment.py` — platform-specific splitting
+- `requirements.txt` — Python dependencies
+
+## Known limitations
+
+- gTTS requires network access and its available languages/accents depend on the service.
+- Whisper can require substantial CPU, RAM, and disk space; transcription time depends on the selected model.
+- FFmpeg is an external system dependency and must be installed separately.
+- The current script is configured through constants in `main.py`; it does not yet provide a command-line interface.
+- Platform duration limits are conservative project settings, not guarantees that platform policies will remain unchanged.
+
+## License and media
+
+No sample media is included in the repository. Only use source footage, scripts, fonts, and generated audio that you have permission to use and distribute.

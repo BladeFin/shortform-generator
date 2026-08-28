@@ -1,4 +1,23 @@
-/inputs
-/outputs
-/__pycache__
-/scripts
+# Local media and generated output
+inputs/
+outputs/
+scripts/
+*.mp3
+*.wav
+*.srt
+*.mp4
+*.mkv
+*.mov
+
+# Python
+a__pycache__/
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# OS/editor files
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/

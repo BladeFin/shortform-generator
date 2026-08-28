@@ -1,6 +1,7 @@
 import subprocess
 from srt import formatTimestamp
 import random
+import os
 #crop video
 #add audio to video
 #add srt subs to video
@@ -20,6 +21,10 @@ def createVideo(source_video_path, audio_path, srt_path, video_output_path, rand
     print(f"Success!  Hopefully...   Worth double checking.  Should be {video_output_path}")
 
 def doEverything(source_video_path, audio_path, srt_path, video_output_path, randomize=False):
+    output_directory = os.path.dirname(video_output_path)
+    if output_directory:
+        os.makedirs(output_directory, exist_ok=True)
+
     try:
         if (randomize): #Make the source video start at a random (viable) time
             videoTimeCommand = [
@@ -45,8 +50,8 @@ def doEverything(source_video_path, audio_path, srt_path, video_output_path, ran
 
             audioTime = result.stdout.strip()
             
-            startRange = float(videoTime)-float(audioTime)
-            startTime = formatTimestamp(random.uniform(0,startRange))
+            startRange = max(0, float(videoTime) - float(audioTime))
+            startTime = formatTimestamp(random.uniform(0, startRange))
             startTime = f"{startTime[:8]}.{startTime[9:]}"
         else:
             startTime = "00:00:00.000"
@@ -73,9 +78,9 @@ def doEverything(source_video_path, audio_path, srt_path, video_output_path, ran
         subprocess.run(command, check=True)
 
     except subprocess.CalledProcessError as e:
-        print(f" Something went wrong while cutting the video: {e}")
-    except FileNotFoundError:
-        print("FFmpeg isn't around D:")
+        raise RuntimeError("FFmpeg could not combine the video, audio, and subtitles") from e
+    except FileNotFoundError as e:
+        raise RuntimeError("FFmpeg/ffprobe was not found; install it and add it to PATH") from e
 
 #Uses the srt file to find the duration of the audio
 #Deprecated, use ffprobe above now

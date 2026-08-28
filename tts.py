@@ -1,4 +1,5 @@
 from gtts import gTTS
+import os
 import subprocess
 
 def generateTTS(script, output, lang='en', tld='com'):
@@ -22,32 +23,29 @@ def generateTTS(script, output, lang='en', tld='com'):
 
 #used to speed up audio, amount=1.5 \equiv 1.5x speed
 def speedUpAudio(audioPath, amount):
+    temporary_audio_path = f"{audioPath}.speedup.mp3"
     try:
-        command = [ #speed up audio
+        command = [ # speed up audio
             "ffmpeg",
             "-y",
             "-i", audioPath,
             "-filter_complex", f"[0:a]atempo={amount}[a]", #amount=1.5 \equiv 1.5x speed
             "-map", "[a]",
-            f"temp{audioPath}"
+            temporary_audio_path
             ]
 
             
         subprocess.run(command, check=True)
 
-        command = [ #replace the original with the (sped up) temp
-            "powershell",
-            "mv",
-            "-Force",
-            f"temp{audioPath}", audioPath
-        ]
-
-        subprocess.run(command, check=True)
+        os.replace(temporary_audio_path, audioPath)
 
     except subprocess.CalledProcessError as e:
-        print(f" Something went wrong while cutting the video: {e}")
-    except FileNotFoundError:
-        print("FFmpeg isn't around D:")
+        raise RuntimeError(f"FFmpeg could not speed up {audioPath}") from e
+    except FileNotFoundError as e:
+        raise RuntimeError("FFmpeg was not found; install it and add it to PATH") from e
+    finally:
+        if os.path.exists(temporary_audio_path):
+            os.remove(temporary_audio_path)
 
 if (__name__ == "__main__"):
 
